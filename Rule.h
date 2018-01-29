@@ -19,12 +19,6 @@ class ErrFailed:public std::exception{
 class Rule{
 	public:
 		Rule(){}
-		Rule(const char *str){
-			std::string s(str);
-			for(auto i:s){
-				m_set.insert(i);
-			}
-		}
 		
 		inline void addRule(Rule &r1){
 			m_rules.push_back(std::vector<Rule*>());
@@ -41,14 +35,14 @@ class Rule{
 			m_rules.rbegin()->push_back(&r2);
 			m_rules.rbegin()->push_back(&r3);
 		}
-		void addRule(Rule &r1,Rule &r2,Rule &r3,Rule &r4){
+		inline void addRule(Rule &r1,Rule &r2,Rule &r3,Rule &r4){
 			m_rules.push_back(std::vector<Rule*>());
 			m_rules.rbegin()->push_back(&r1);
 			m_rules.rbegin()->push_back(&r2);
 			m_rules.rbegin()->push_back(&r3);
 			m_rules.rbegin()->push_back(&r4);
 		}
-		void addRule(Rule &r1,Rule &r2,Rule &r3,Rule &r4,Rule &r5){
+		inline void addRule(Rule &r1,Rule &r2,Rule &r3,Rule &r4,Rule &r5){
 			m_rules.push_back(std::vector<Rule*>());
 			m_rules.rbegin()->push_back(&r1);
 			m_rules.rbegin()->push_back(&r2);
@@ -57,32 +51,47 @@ class Rule{
 			m_rules.rbegin()->push_back(&r5);
 		}
 		
+		inline void addString(std::string &str){
+			m_set.insert(str);
+		}
+		inline void addString(const char *cstr){
+			std::string str(cstr);
+			m_set.insert(str);
+		}
+		
 		std::string::iterator check(std::string::iterator string_itr,
 									std::string::iterator end_itr);
 	protected:
 	private:
-		std::set<char> m_set;
+		std::set<std::string> m_set;
 		std::list<std::vector<Rule*>> m_rules;
 };
 
 std::string::iterator Rule::check(  std::string::iterator string_itr,
 									std::string::iterator end_itr){
-	if(string_itr == end_itr){
-		throw ErrFailed();
-		return string_itr;
-	}
+	bool all_right = true;
+	auto temp_itr = string_itr;
 	if(!m_set.empty()){
-		for(auto set_itr:m_set){
-			if(*string_itr == set_itr){
-				return (++string_itr);
+		for(auto &set_itr:m_set){//set_itr is a string
+			temp_itr = string_itr;
+			all_right = true;
+			for(auto set_str_itr:set_itr){//set_str_itr is a char
+				if(((*temp_itr)!=set_str_itr)||(temp_itr==end_itr)){
+					all_right = false;
+					break;
+				}
+				++temp_itr;
+			}
+			if(all_right){
+				return temp_itr;
 			}
 		}
 		throw ErrFailed();
 		return string_itr;
 	}
 	for(auto &list_itr:m_rules){
-		auto temp_itr = string_itr;
-		bool all_right = true;
+		temp_itr = string_itr;
+		all_right = true;
 		for(auto &itr:list_itr){
 			try{
 				temp_itr = itr->check(temp_itr,end_itr);
