@@ -1,10 +1,36 @@
 #XParser
 
-简单的文法解析器
+一个简单的上下文无关文法解析器<br>
+采用递归下降式解析
+
+## 函数说明
+##### Parser::check
+```
+//该函数检查字符串中是否存在满足规则的前缀串
+//函数原型如下:
+bool Parser::check(Rule&,const char*)noexcept;
+bool Parser::check(Rule&,std::string&)noexcept;
+```
+##### Parser::checkAll
+```
+//该函数检查整个串是否全满足规则
+//函数原型如下:
+bool Parser::checkAll(Rule&,const char*)noexcept;
+bool Parser::checkAll(Rule&,std::string&)noexcept;
+```
+##### Parser::match
+```
+//该函数返回已经匹配的前缀串
+//函数原型如下:
+std::string Parser::match(Rule&,const char*)noexcept;
+std::string Parser::match(Rule&,std::string&)noexcept;
+```
 
 ## Example
 ```
 #include <iostream>
+#include <string>
+#include <utility>
 #include "Parser.h"
 
 using namespace std;
@@ -20,30 +46,45 @@ using namespace std;
 
 int main(int argc,char *argv[]){
 	//根据产生式构建规则
-	Rule digit("0123456789");
+	string tmp;
+	Rule digit;
+	for(char c='0';c<='9';++c){
+		tmp = std::move(string(1,c));
+		digit.addString(tmp);
+	}
 	Rule number;
 		number.addRule(digit,number);
 		number.addRule(digit);
-	Rule neg("-"),pos("+");
+	Rule neg,pos;
+		tmp = std::move(string(1,'-'));
+		neg.addString(tmp);
+		tmp = std::move(string(1,'+'));
+		pos.addString(tmp);
 	Rule snumber;
 		snumber.addRule(neg,number);
 		snumber.addRule(pos,number);
 		snumber.addRule(number);
-	Rule point(".");
+	Rule point;
+		tmp = std::move(string(1,'.'));
+		point.addString(tmp);
 	Rule real;
 		real.addRule(snumber,point,number);
-	Rule exp("eE");
+	Rule exp;
+		tmp = std::move(string(1,'e'));
+		exp.addString(tmp);
+		tmp = std::move(string(1,'E'));
+		exp.addString(tmp);
 	Rule realexp;
 		realexp.addRule(real,exp,snumber);
 		realexp.addRule(snumber,exp,snumber);
 
 
 	//匹配一些数字
-	if(Parse::checkAll(realexp,"1.454e5"))
+	if(Parser::checkAll(realexp,"1.454e5"))
 		cout<<"1.454e5是指数形式的实数"<<endl;
-	if(Parse::check(snumber,"-1278.422"))
+	if(Parser::check(snumber,"-1278.422"))
 		cout<<"-1278.422存在一个有符号整数的前缀:-1278"<<endl;
-	cout<<"-10086.88e-3abce的满足实数指数形式的前缀串为:"<<Parse::match(realexp,"-10086.88e-3abce")<<endl;
+	cout<<"-10086.88e-3abce的满足实数指数形式的前缀串为:"<<Parser::match(realexp,"-10086.88e-3abce")<<endl;
 	return 0;
 }
 ```
